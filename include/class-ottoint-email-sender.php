@@ -80,6 +80,7 @@ class OttointEmailSender
         </select>';
 ?>
         <select name="otto_user_role">
+            <option value="all">All</option>
             <?php wp_dropdown_roles($rol); ?>
         </select>
 <?php
@@ -158,8 +159,8 @@ class OttointEmailSender
         wp_reset_query();
     }
 
-    // Send email when a page published
-    public function ottoint_send_page_wp_email()
+    // Get Post type ID
+    public function otto_get_posttype_id($ptyp_meta)
     {
         $id = "";
         $args = array(
@@ -169,7 +170,7 @@ class OttointEmailSender
             'meta_query' => array(
                 array(
                     'key' => '_otto_post_type_',
-                    'value' => 'page',
+                    'value' => $ptyp_meta,
                 )
             )
 
@@ -181,9 +182,20 @@ class OttointEmailSender
                 $id = get_the_ID();
             }
         }
-        $role = get_post_meta($id, '_otto_user_role_', true);
+        return $id;
+    }
+    // Send email when a page published
+    public function ottoint_send_page_wp_email()
+    {
+        $id = $this->otto_get_posttype_id('page');
 
-        $users = get_users(array('role' => $role));
+        $role = "";
+        $role = get_post_meta($id, '_otto_user_role_', true);
+        if ($role == 'all') :
+            $users = get_users();
+        else :
+            $users = get_users(array('role' => $role));
+        endif;
         foreach ($users as $user) {
             $user_info = get_userdata($user->ID);
             $to = $user_info->user_email;
@@ -201,29 +213,15 @@ class OttointEmailSender
     // Send email when a post published
     public function ottoint_send_post_wp_email()
     {
-        $id = "";
-        $args = array(
-            'post_type' => self::P_TYPE,
-            'posts_per_page' => 1,
-            'post_status' => 'publish',
-            'meta_query' => array(
-                array(
-                    'key' => '_otto_post_type_',
-                    'value' => 'post',
-                )
-            )
+        $id = $this->otto_get_posttype_id('post');
 
-        );
-        $the_query = new WP_Query($args);
-        if ($the_query->have_posts()) {
-            while ($the_query->have_posts()) {
-                $the_query->the_post();
-                $id = get_the_ID();
-            }
-        }
+        $role = "";
         $role = get_post_meta($id, '_otto_user_role_', true);
-
-        $users = get_users(array('role' => $role));
+        if ($role == 'all') :
+            $users = get_users();
+        else :
+            $users = get_users(array('role' => $role));
+        endif;
         foreach ($users as $user) {
             $user_info = get_userdata($user->ID);
             $to = $user_info->user_email;
@@ -239,29 +237,15 @@ class OttointEmailSender
     // Send email when a user logged in
     public function ottoint_send_user_in_wp_email()
     {
-        $id = "";
-        $args = array(
-            'post_type' => self::P_TYPE,
-            'posts_per_page' => -1,
-            'post_status' => 'publish',
-            'meta_query' => array(
-                array(
-                    'key' => '_otto_post_type_',
-                    'value' => 'user-in',
-                )
-            )
+        $id = $this->otto_get_posttype_id('user-in');
 
-        );
-        $the_query = new WP_Query($args);
-        if ($the_query->have_posts()) {
-            while ($the_query->have_posts()) {
-                $the_query->the_post();
-                $id = get_the_ID();
-            }
-        }
+        $role = "";
         $role = get_post_meta($id, '_otto_user_role_', true);
-
-        $users = get_users(array('role' => $role));
+        if ($role == 'all') :
+            $users = get_users();
+        else :
+            $users = get_users(array('role' => $role));
+        endif;
         foreach ($users as $user) {
             $user_info = get_userdata($user->ID);
             $to = $user_info->user_email;
